@@ -38,7 +38,7 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center">
-            <Waves className="h-5 w-5 text-sidebar-primary-foreground" />
+            <img src="/images/logo/Logo.png" alt="AquaWatch Logo" className="h-full w-full object-contain" />
           </div>
           {!isCollapsed && (
             <div className="flex flex-col">
