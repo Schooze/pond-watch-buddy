@@ -23,21 +23,18 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
     if (!username || !password) {
       toast.error('Please enter both username and password');
       return;
     }
-
-    const success = login(username, password);
-    
+    const success = await login(username, password);
     if (success) {
       toast.success('Login successful!');
       navigate('/dashboard');
     } else {
-      toast.error('Invalid credentials. Try admin/admin123');
+      toast.error('Invalid credentials.');
     }
   };
 

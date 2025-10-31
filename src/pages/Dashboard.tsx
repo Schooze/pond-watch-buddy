@@ -4,6 +4,7 @@ import AlertBanner from '@/components/AlertBanner';
 import { Button } from '@/components/ui/button';
 import { useSensorData } from '@/hooks/useSensorData';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 const Dashboard = () => {
   const { currentReading, alertStatus, refreshData } = useSensorData();
@@ -13,6 +14,20 @@ const Dashboard = () => {
     toast.success('Data refreshed');
   };
 
+  const handleSimulate = async () => {
+    // Generate random sensor values
+    const temperature = 20 + Math.random() * 12;
+    const pH = 6.5 + Math.random() * 2;
+    // Send to Supabase
+    await supabase.from('sensor_log').insert([
+      { sensor_type: 'temperature', value: temperature },
+      { sensor_type: 'pH', value: pH }
+    ]);
+    toast.success('Simulation data sent!');
+    // Optionally refresh data
+    refreshData();
+  };
+
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -20,10 +35,15 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Real-time pond monitoring</p>
         </div>
-        <Button onClick={handleRefresh} variant="outline" className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Refresh
-        </Button>
+        <div className="flex items-center">
+          <Button onClick={handleRefresh} variant="outline" className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+          <Button onClick={handleSimulate} variant="outline" className="gap-2 ml-2">
+            <span>Run Simulation</span>
+          </Button>
+        </div>
       </div>
 
       <AlertBanner alertStatus={alertStatus} />
@@ -31,19 +51,19 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <MetricCard
           title="Water Temperature"
-          value={currentReading.temperature}
+          value={currentReading ? Number(currentReading.temperature).toFixed(3) : 0}
           unit="°C"
           icon={Thermometer}
           status={alertStatus.temperature}
-          safeRange="20-32°C"
+          safeRange={`20-32°C | ${currentReading ? new Date(currentReading.timestamp).toLocaleString() : '-'}`}
         />
         <MetricCard
           title="pH Level"
-          value={currentReading.pH}
+          value={currentReading ? Number(currentReading.pH).toFixed(3) : 0}
           unit="pH"
           icon={Droplet}
           status={alertStatus.pH}
-          safeRange="6.5-8.5"
+          safeRange={`6.5-8.5 | ${currentReading ? new Date(currentReading.timestamp).toLocaleString() : '-'}`}
         />
       </div>
 
@@ -53,16 +73,16 @@ const Dashboard = () => {
           <div className="flex justify-between py-2 border-b">
             <span className="text-muted-foreground">Timestamp</span>
             <span className="font-medium">
-              {new Date(currentReading.timestamp).toLocaleString()}
+              {currentReading ? new Date(currentReading.timestamp).toLocaleString() : '-'}
             </span>
           </div>
           <div className="flex justify-between py-2 border-b">
             <span className="text-muted-foreground">Temperature</span>
-            <span className="font-medium">{currentReading.temperature}°C</span>
+            <span className="font-medium">{currentReading ? currentReading.temperature : '-'}°C</span>
           </div>
           <div className="flex justify-between py-2">
             <span className="text-muted-foreground">pH Level</span>
-            <span className="font-medium">{currentReading.pH}</span>
+            <span className="font-medium">{currentReading ? currentReading.pH : '-'} pH</span>
           </div>
         </div>
       </div>
