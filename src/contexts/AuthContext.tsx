@@ -6,6 +6,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   user: { username: string } | null;
+  register: (username: string, password: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,18 +46,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Login failed');
+        setIsAuthenticated(false);
+        setUser(null);
+        return false;
       }
 
       const data = await response.json();
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('user', JSON.stringify({ username }));
-      
       setUser({ username });
       setIsAuthenticated(true);
       return true;
     } catch (error) {
-      console.error('Login error:', error);
+      setIsAuthenticated(false);
+      setUser(null);
+      return false;
+    }
+  };
+
+  const register = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const response = await fetch('http://localhost:8000/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+      if (!response.ok) return false;
+      return true;
+    } catch {
       return false;
     }
   };
@@ -69,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, user }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout, user, register }}>
       {children}
     </AuthContext.Provider>
   );
