@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export interface SensorReading {
   timestamp: string;
@@ -10,20 +11,6 @@ export interface AlertStatus {
   temperature: 'normal' | 'warning' | 'critical';
   pH: 'normal' | 'warning' | 'critical';
 }
-
-const generateRandomReading = (): SensorReading => {
-  // Temperature range: 18°C to 34°C (sometimes outside safe range)
-  const temperature = 20 + Math.random() * 14 + (Math.random() > 0.8 ? (Math.random() > 0.5 ? 3 : -3) : 0);
-  
-  // pH range: 6.0 to 9.0 (sometimes outside safe range)
-  const pH = 6.5 + Math.random() * 2 + (Math.random() > 0.8 ? (Math.random() > 0.5 ? 0.8 : -0.8) : 0);
-  
-  return {
-    timestamp: new Date().toISOString(),
-    temperature: parseFloat(temperature.toFixed(1)),
-    pH: parseFloat(pH.toFixed(1)),
-  };
-};
 
 const getAlertStatus = (reading: SensorReading): AlertStatus => {
   const tempStatus = 
@@ -38,41 +25,64 @@ const getAlertStatus = (reading: SensorReading): AlertStatus => {
 };
 
 export const useSensorData = () => {
-  const [currentReading, setCurrentReading] = useState<SensorReading>(generateRandomReading());
+  const [currentReading, setCurrentReading] = useState<SensorReading | null>(null);
   const [historicalData, setHistoricalData] = useState<SensorReading[]>([]);
   const [alertStatus, setAlertStatus] = useState<AlertStatus>({ temperature: 'normal', pH: 'normal' });
 
-  // Initialize with some historical data
-  useEffect(() => {
-    const initialData: SensorReading[] = [];
-    const now = new Date();
+  // Fetch latest and historical sensor data from Supabase
+  const fetchSensorData = async () => {
+    // Fetch latest readings for each sensor type
+    const { data: latestTemp, error: tempError } = await supabase
+      .from('sensor_log')
+      .select('*')
+      .eq('sensor_type', 'temperature')
+      .order('timestamp', { ascending: false })
+      .limit(1);
+    const { data: latestPh, error: phError } = await supabase
+      .from('sensor_log')
+      .select('*')
+      .eq('sensor_type', 'pH')
+      .order('timestamp', { ascending: false })
+      .limit(1);
     
-    for (let i = 24; i >= 0; i--) {
-      const timestamp = new Date(now.getTime() - i * 60 * 60 * 1000);
-      initialData.push({
-        timestamp: timestamp.toISOString(),
-        temperature: 24 + Math.random() * 6,
-        pH: 7.0 + Math.random() * 1.0,
-      });
+    if (latestTemp && latestPh && latestTemp[0] && latestPh[0]) {
+      const reading: SensorReading = {
+        timestamp: latestTemp[0].timestamp,
+        temperature: Number(latestTemp[0].value),
+        pH: Number(latestPh[0].value),
+      };
+      setCurrentReading(reading);
+      setAlertStatus(getAlertStatus(reading));
     }
-    
-    setHistoricalData(initialData);
-  }, []);
 
-  // Simulate real-time data updates every 5 seconds
+    // Fetch historical data (last 25 readings for each type)
+    const { data: tempHistory } = await supabase
+      .from('sensor_log')
+      .select('*')
+      .eq('sensor_type', 'temperature')
+      .order('timestamp', { ascending: false })
+      .limit(25);
+    const { data: phHistory } = await supabase
+      .from('sensor_log')
+      .select('*')
+      .eq('sensor_type', 'pH')
+      .order('timestamp', { ascending: false })
+      .limit(25);
+    if (tempHistory && phHistory) {
+      // Merge by timestamp (simple join)
+      const merged: SensorReading[] = tempHistory.map((temp, i) => ({
+        timestamp: temp.timestamp,
+        temperature: Number(temp.value),
+        pH: phHistory[i] ? Number(phHistory[i].value) : NaN,
+      }));
+      setHistoricalData(merged);
+    }
+  };
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      const newReading = generateRandomReading();
-      setCurrentReading(newReading);
-      setAlertStatus(getAlertStatus(newReading));
-      
-      setHistoricalData(prev => {
-        const updated = [...prev, newReading];
-        // Keep last 100 readings
-        return updated.slice(-100);
-      });
-    }, 5000);
-
+    fetchSensorData();
+    // Optionally, poll every 5s for real-time updates
+    const interval = setInterval(fetchSensorData, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -80,6 +90,6 @@ export const useSensorData = () => {
     currentReading,
     historicalData,
     alertStatus,
-    refreshData: () => setCurrentReading(generateRandomReading()),
+    refreshData: fetchSensorData,
   };
 };
