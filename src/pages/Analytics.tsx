@@ -14,9 +14,10 @@ const Analytics = () => {
     const now = new Date();
     const hoursAgo = timeRange === '1h' ? 1 : timeRange === '6h' ? 6 : 24;
     const cutoffTime = new Date(now.getTime() - hoursAgo * 60 * 60 * 1000);
-    
+    // Sort readings by timestamp ascending (oldest to newest)
     return historicalData
       .filter(reading => new Date(reading.timestamp) >= cutoffTime)
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
       .map(reading => ({
         ...reading,
         time: new Date(reading.timestamp).toLocaleTimeString([], { 

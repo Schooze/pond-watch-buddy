@@ -141,7 +141,7 @@ const Login = () => {
                 Create Account
               </Button>
               <p className="text-xs text-center text-muted-foreground mt-4">
-                Default: admin / admin123
+                Aqua Tech, your partner in smart aquaculture.
               </p>
             </form>
           )}

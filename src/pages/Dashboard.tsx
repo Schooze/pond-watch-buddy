@@ -1,10 +1,11 @@
-import { Thermometer, Droplet, RefreshCw } from 'lucide-react';
+import { Thermometer, Droplet, RefreshCw, Play } from 'lucide-react';
 import MetricCard from '@/components/MetricCard';
 import AlertBanner from '@/components/AlertBanner';
 import { Button } from '@/components/ui/button';
 import { useSensorData } from '@/hooks/useSensorData';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 const Dashboard = () => {
   const { currentReading, alertStatus, refreshData } = useSensorData();
@@ -41,6 +42,7 @@ const Dashboard = () => {
             Refresh
           </Button>
           <Button onClick={handleSimulate} variant="outline" className="gap-2 ml-2">
+            <Play className="h-5 w-5" />
             <span>Run Simulation</span>
           </Button>
         </div>
@@ -51,7 +53,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <MetricCard
           title="Water Temperature"
-          value={currentReading ? Number(currentReading.temperature).toFixed(3) : 0}
+          value={currentReading ? Number(currentReading.temperature.toFixed(3)) : 0}
           unit="°C"
           icon={Thermometer}
           status={alertStatus.temperature}
@@ -59,7 +61,7 @@ const Dashboard = () => {
         />
         <MetricCard
           title="pH Level"
-          value={currentReading ? Number(currentReading.pH).toFixed(3) : 0}
+          value={currentReading ? Number(currentReading.pH.toFixed(3)) : 0}
           unit="pH"
           icon={Droplet}
           status={alertStatus.pH}
@@ -78,14 +80,28 @@ const Dashboard = () => {
           </div>
           <div className="flex justify-between py-2 border-b">
             <span className="text-muted-foreground">Temperature</span>
-            <span className="font-medium">{currentReading ? currentReading.temperature : '-'}°C</span>
+            <span className="font-medium">
+              {currentReading ? Number(currentReading.temperature).toFixed(3) : '-'}°C
+            </span>
           </div>
           <div className="flex justify-between py-2">
             <span className="text-muted-foreground">pH Level</span>
-            <span className="font-medium">{currentReading ? currentReading.pH : '-'} pH</span>
+            <span className="font-medium">
+              {currentReading ? Number(currentReading.pH).toFixed(3) : '-'} pH
+            </span>
           </div>
         </div>
       </div>
+
+      <Card className="mt-6 shadow-card">
+        <CardHeader>
+          <CardTitle>Run Simulation Flow</CardTitle>
+          <CardDescription>This diagram shows the flow of the simulation process.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <img src="images/Flow.drawio.png" alt="Run Simulation Flow" className="w-full h-auto rounded-lg border" />
+        </CardContent>
+      </Card>
     </div>
   );
 };
