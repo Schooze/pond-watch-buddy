@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useSensorData } from '@/hooks/useSensorData';
 
+const API_BASE_URL = "https://backend-production-6fac.up.railway.app";
+
 type TimeRange = '1h' | '6h' | '24h';
 
 const Analytics = () => {

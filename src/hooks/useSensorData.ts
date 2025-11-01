@@ -24,6 +24,8 @@ const getAlertStatus = (reading: SensorReading): AlertStatus => {
   return { temperature: tempStatus, pH: pHStatus };
 };
 
+const API_BASE_URL = "https://backend-production-6fac.up.railway.app";
+
 export const useSensorData = () => {
   const [currentReading, setCurrentReading] = useState<SensorReading | null>(null);
   const [historicalData, setHistoricalData] = useState<SensorReading[]>([]);

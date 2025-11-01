@@ -7,6 +7,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
+const API_BASE_URL = "https://backend-production-6fac.up.railway.app";
+
 const Dashboard = () => {
   const { currentReading, alertStatus, refreshData } = useSensorData();
 
